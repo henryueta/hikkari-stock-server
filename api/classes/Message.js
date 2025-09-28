@@ -1,5 +1,5 @@
 
-class ResponseMessage{
+class Message{
     constructor(message,data){
         this.message = message;
         if(!data){
@@ -9,4 +9,4 @@ class ResponseMessage{
     }
 }
 
-export default ResponseMessage
+export default Message

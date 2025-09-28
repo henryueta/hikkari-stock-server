@@ -1,7 +1,8 @@
 import express from 'express';
 import database from '../config/supabase.js';
 import { onFormatTable } from '../functions/table.js';
-import ResponseMessage from '../classes/ResponseMessage.js';
+import Message from '../classes/Message.js';
+import { onResponseError } from '../functions/error.js';
 import { onCheckToken } from '../functions/token.js';
 
 const product_router = express.Router();
@@ -9,38 +10,38 @@ const product_router = express.Router();
 product_router.post("/product/post",async (req,res)=>{
 
     try {
-        const {token,data} = req.body
-        
+
+        const {token} = req.query
+
         if(!token){
-            res.status(403).send(new ResponseMessage("Autenticação inválida"));
-            
-            const token_checkout = onCheckToken(token);
-            if(!token_checkout.validated){
-
-               return  res.status(403).send(new ResponseMessage("Token inválido"))
-
-            }
-
+            return onResponseError(res,403,"Autenticação inválida")
         }
+        const token_checkout = onCheckToken(token);
+        if(!token_checkout.validated){
+            return onResponseError(res,403,"Token inválido")            
+        }
+
+        const {data} = req.body
+
         if(!data){
-            res.status(403).send(new ResponseMessage("Campos inválidos ou sem atribuição"));
+            res.status(403).send(new Message("Campos inválidos ou sem atribuição"));
         
             if(typeof data !== 'object'){
-               return  res.status(403).send(new ResponseMessage("Tipo de campos inválidos"))
+               return  res.status(403).send(new Message("Tipo de campos inválidos"))
             }
 
         }
 
         if(!data.description.length){
-           return res.status(403).send(new ResponseMessage("Campo descrição inválido"))
+           return res.status(403).send(new Message("Campo descrição inválido"))
         }
 
         if(!data.cod.length){
-          return  res.status(403).send(new ResponseMessage("Campo código inválido"))
+          return  res.status(403).send(new Message("Campo código inválido"))
         }
 
         // if(!data.variations.length){
-        //    return res.status(403).send(new ResponseMessage("Campo variações inválido"))
+        //    return res.status(403).send(new Message("Campo variações inválido"))
         // }
         
         const product_insert = await database
@@ -52,7 +53,7 @@ product_router.post("/product/post",async (req,res)=>{
         .select("id")
 
         if(product_insert.error){
-           return res.status(500).send(new ResponseMessage(product_insert.error))
+           return res.status(500).send(new Message(product_insert.error))
         }
 
         if(!!data.variations.length && !product_insert.error){
@@ -70,7 +71,7 @@ product_router.post("/product/post",async (req,res)=>{
 
             if(variations_insert.error){
 
-                return res.status(500).send(new ResponseMessage(variations_insert.error))
+                return res.status(500).send(new Message(variations_insert.error))
 
             }
 
@@ -86,7 +87,7 @@ product_router.post("/product/post",async (req,res)=>{
             ))
 
             if(product_variations_insert.error){
-                return res.status(500).send(new ResponseMessage(product_variations_insert.error))
+                return res.status(500).send(new Message(product_variations_insert.error))
             }
 
             const variation_size_list = data.variations.map((variation_item,variation_index)=>
@@ -129,13 +130,13 @@ product_router.post("/product/post",async (req,res)=>{
 
                 if(size_insert.error){
                     console.log(size_insert.error)
-                    return res.status(500).send(new ResponseMessage(size_insert.error))
+                    return res.status(500).send(new Message(size_insert.error))
                 }
 
             }
         }
         
-       return  res.status(201).send(new ResponseMessage("Usuário pode cadastrar produto"))
+       return  res.status(201).send(new Message("Usuário pode cadastrar produto"))
 
     } catch (error) {
         console.log(error)
@@ -159,7 +160,7 @@ product_router.get("/product/get",async(req,res)=>{
 
         const product_table = onFormatTable(product_data.data);
 
-        res.status(200).send(new ResponseMessage("Produtos listados com sucesso",product_table))
+        res.status(200).send(new Message("Produtos listados com sucesso",product_table))
     
     } catch (error) {
         console.log(error)
@@ -177,14 +178,14 @@ product_router.get("/product/get/options",async (req,res)=>{
     .select("label:description,value:id")
 
         if(product_data.error){
-            return res.status(500).send(new ResponseMessage(product_data.error))
+            return res.status(500).send(new Message(product_data.error))
         }
 
-        return res.status(200).send(new ResponseMessage("Opções de produto listados com sucesso",product_data))
+        return res.status(200).send(new Message("Opções de produto listados com sucesso",product_data))
 
     } catch (error) {
         console.log(error)
-        res.status(500).send(new ResponseMessage(error))
+        res.status(500).send(new Message(error))
     }
 
 })
@@ -196,7 +197,7 @@ product_router.get("/product/get/options/",async (req,res)=>{
         const {product_id} = req.query
 
         if(!product_id){
-            return res.status(403).send(new ResponseMessage("Campo identificador de produto inválido"))
+            return res.status(403).send(new Message("Campo identificador de produto inválido"))
         }
 
         const variation_data = await database
@@ -204,14 +205,14 @@ product_router.get("/product/get/options/",async (req,res)=>{
         .select("label:name,value:id")
 
         if(variation_data.error){
-            return res.status(500).send(new ResponseMessage(variation_data.error))
+            return res.status(500).send(new Message(variation_data.error))
         }
 
 
 
     } catch (error) {
         console.log(error)
-        res.status(500).send(new ResponseMessage(error))
+        res.status(500).send(new Message(error))
     }
 
 })

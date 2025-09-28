@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken"
 import dotenv from "dotenv"
+import Message from "../classes/Message.js";
 dotenv.config();
 
 const token_secret = process.env.TOKEN_SECRET;
@@ -35,7 +36,8 @@ const onCheckToken = (token)=>{
 
 }
 
+
 export {
     onCheckToken,
-    onCreateToken
+    onCreateToken,
 }
