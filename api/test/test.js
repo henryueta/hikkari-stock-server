@@ -5,12 +5,13 @@ import { onFormatTable } from "../functions/table.js";
 (async()=>{
 
     const result = await database
-    .from("vw_table_product")
-    .select("*");
+    .from("tb_product")
+    .select("label:description,value:id")
 
+    console.log(result)
+    //produto - variação - tamanho - produto_variação - produto_tamanho 
     if(result.data){
-        const teste = onFormatTable(result.data)
-        console.log(teste)
+        console.log(result.data)
         // const header = Object.keys(result.data[0])
         // // .filter((header_item)=>header_item.toLowerCase() !== 'id')
         // const formated_data = result.data
