@@ -101,8 +101,37 @@ sale_router.get("/sale/variation/get",async (req,res)=>{
 sale_router.get("/sale/size/get",async (req,res)=>{
 
     try {
-        
-        
+        const {token,variation_id} = req.query
+
+        if(!token){
+            return onResponseError(res,403,"Autenticação inválida")
+        }
+        const token_checkout = onCheckToken(token);
+        if(!token_checkout.validated){
+            return onResponseError(res,403,"Token inválido")            
+        }       
+      
+        if(!variation_id){
+            return onResponseError(res,403,"Campo identificador de variação inválido")
+        }
+
+        const size_data = await database
+        .from("tb_size")
+        .select("label:name,value:id")
+        .eq("fk_id_variation",variation_id)
+
+        if(size_data.error){
+            return onResponseError(res,500,size_data.error);
+        }
+
+        return res.status(200).send(new Message("Opções de tamanho listados com sucesso",
+            [
+                {
+                    name:'size_id',
+                    options:size_data.data
+                }
+            ]
+        ))
 
     } catch (error) {
        console.log(error)
