@@ -28,7 +28,12 @@ sale_router.get("/sale/product/get",async (req,res)=>{
             return onResponseError(res,500,product_data.error)
         }
 
-        return res.status(200).send(new Message("Opções de produto listados com sucesso",product_data))
+        return res.status(200).send(new Message("Opções de produto listados com sucesso",[
+            {
+            name:'product_id',
+            options:product_data.data
+            }
+        ]))
 
     } catch (error) {
         console.log(error)
@@ -76,11 +81,14 @@ sale_router.get("/sale/variation/get",async (req,res)=>{
             console.log(variation_data.error)
            return onResponseError(res,500,variation_data.error)
         }
-
+        console.log(variation_data.data)
         return res.status(200).send(new Message("Opções de variações listados com sucesso",
-            {
-                variations_id:variation_data.data
-            }
+            [
+                {
+                name:'variation_id',
+                options:variation_data.data
+                }
+            ]
         ))
         
     } catch (error) {
