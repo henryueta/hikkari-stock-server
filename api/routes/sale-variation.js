@@ -66,7 +66,7 @@ sale_variation_router.get("/sale/variation/get",async (req,res)=>{
 sale_variation_router.get("/sale/variation/size/get",async (req,res)=>{
 
     try {
-        const {token,variation_id} = req.query
+        const {token,variation_id,index} = req.query
 
         if(!token){
             return onResponseError(res,403,"Autenticação inválida")
@@ -78,6 +78,10 @@ sale_variation_router.get("/sale/variation/size/get",async (req,res)=>{
       
         if(!variation_id){
             return onResponseError(res,403,"Campo identificador de variação inválido")
+        }
+
+        if(!index){
+            return onResponseError(res,403,"Campo index de variação inválido")
         }
 
         const size_data = await database
@@ -94,6 +98,7 @@ sale_variation_router.get("/sale/variation/size/get",async (req,res)=>{
                 {
                     field_type:"option",
                     name:'size_id',
+                    index:index,
                     value:size_data.data
                 }
             ]

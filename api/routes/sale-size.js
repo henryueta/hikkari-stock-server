@@ -9,7 +9,7 @@ const sale_variation_size_router = express.Router();
     sale_variation_size_router.get("/sale/size/quantity/get",async (req,res)=>{
 
     try {
-        const {token,size_id} = req.query
+        const {token,size_id,index} = req.query
 
         if(!token){
             return onResponseError(res,403,"Autenticação inválida")
@@ -20,7 +20,11 @@ const sale_variation_size_router = express.Router();
         } 
 
         if(!size_id){
-            return onResponseError(res,403,"Campo identificador de variação inválido")
+            return onResponseError(res,403,"Campo identificador de tamanho inválido")
+        }
+
+        if(!index){
+            return onResponseError(res,403,"Campo index de tamanho inválido")
         }
 
         const size_quantity_data = await database
@@ -36,6 +40,7 @@ const sale_variation_size_router = express.Router();
             {
                 field_type:"number",
                 name:"quantity",
+                index:index,
                 value:size_quantity_data.data[0].quantity
             }
         ]))

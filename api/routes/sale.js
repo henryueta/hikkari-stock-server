@@ -6,6 +6,117 @@ import { onCheckToken } from "../functions/token.js";
 
 const sale_router = express.Router();
 
+sale_router.get("/sale/get-id",async (req,res)=>{
+
+    try {
+        const {token,id} = req.query
+        if(!token){
+            return onResponseError(res,403,"Autenticação inválida")
+        }
+        const token_checkout = onCheckToken(token);
+        if(!token_checkout.validated){
+            return onResponseError(res,403,"Token inválido")            
+        } 
+
+        if(!id){
+            return onResponseError(res,403,"Identificador de produto inválido")
+        }
+
+        const sale_data = await database
+        .from("tb_sale")
+        .select("client_name,type:sale_type")
+        .eq("id",id)
+
+        if(sale_data.error){
+            return onResponseError(res,500,sale_data.error)
+        }
+
+        const sale_product_variation_data = await database
+        .from("tb_sale_product")
+        .select("fk_id_product_variation,fk_id_size,quantity")
+        .eq("fk_id_sale",id)
+
+        if(sale_product_variation_data.error){
+            return onResponseError(res,500,sale_product_variation_data.error)
+        }
+
+        const product_variation_data = await database
+        .from("tb_product_variation")
+        .select("fk_id_product,fk_id_variation,id")
+        .in("id",sale_product_variation_data.data.map((product_variation_item)=>
+            product_variation_item.fk_id_product_variation
+        ))
+
+        if(product_variation_data.error){
+            return onResponseError(res,500,product_variation_data.error)
+        }
+
+        const product_data = await database
+        .from("tb_product")
+        .select("value:id")
+        .in("id",product_variation_data.data.map((product_variation_item)=>
+            product_variation_item.fk_id_product
+        ))
+
+        if(product_data.error){
+            return onResponseError(res,500,product_data.error)
+        }
+
+        const variation_data = await database
+        .from("tb_variation")
+        .select("value:id")
+        .in("id",product_variation_data.data.map((product_item)=>
+            product_item.fk_id_variation
+        ))
+
+        if(variation_data.error){
+            return onResponseError(res,500,variation_data.error)
+        }
+
+        const size_data = await database
+        .from("tb_size")
+        .select("value:id,fk_id_variation")
+        .in("id",sale_product_variation_data.data.map((product_variation_item)=>
+            product_variation_item.fk_id_size
+        ))
+
+        const formated_sale_data = {
+            client_name:sale_data.data[0].client_name,
+            type:sale_data.data[0].type,
+            products_id:product_data.data.map((product_item)=>{
+                return {
+
+                    product_id:product_item.value,
+
+                    variations_id:product_variation_data.data.filter((product_variation_item)=>
+                        product_variation_item.fk_id_product === product_item.value
+                    ).map((product_variation_item)=>
+                        {
+                            return {
+                                variation_id:product_variation_item.fk_id_variation,
+
+                                size_id: size_data.data.filter((size_item)=>
+                                    size_item.fk_id_variation === product_variation_item.fk_id_variation
+                                )[0].value,
+
+                                quantity:sale_product_variation_data.data.filter((sale_product_variation_item)=>
+                                    sale_product_variation_item.fk_id_product_variation === product_variation_item.id
+                                )[0].quantity
+                            }
+                        }
+                    )
+                }
+            })
+        }
+
+        return res.status(200).send(new Message("Dados de venda listados com sucesso",formated_sale_data))
+
+    } catch (error) {
+        console.log(error)
+        return res.status(403).send(new Message(error))
+    }
+
+})
 
 sale_router.post("/sale/post",async (req,res)=>{
 

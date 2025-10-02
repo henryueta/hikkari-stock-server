@@ -217,4 +217,93 @@ product_router.get("/product/get/options/",async (req,res)=>{
 
 })
 
+product_router.get("/product/get-id",async (req,res)=>{
+
+    try {
+        
+        const {token,id} = req.query
+
+        if(!token){
+            return onResponseError(res,403,"Autenticação inválida")
+        }
+        const token_checkout = onCheckToken(token);
+        if(!token_checkout.validated){
+            return onResponseError(res,403,"Token inválido")            
+        }
+
+        if(!id){
+            return onResponseError(res,403,"Identificador de produto inválido")
+        }
+
+        const product_data = await database
+        .from("tb_product")
+        .select("description,cod")
+        .eq("id",id)
+
+        if(product_data.error){
+            return onResponseError(res,500,product_data.error)
+        }
+
+        const product_variation_data = await database
+        .from("tb_product_variation")
+        .select("fk_id_variation")
+        .eq("fk_id_product",id)
+
+        if(product_variation_data.error){
+            return onResponseError(res,500,product_variation_data.error)
+        }
+
+        const variation_data = await database
+        .from("tb_variation")
+        .select("name,id")
+        .in("id",product_variation_data.data.map((product_variation_item)=>
+            product_variation_item.fk_id_variation
+        ))
+
+        if(variation_data.error){
+            return onResponseError(res,500,variation_data.error)
+        }
+
+        const variation_size_data = await database
+        .from("tb_size")
+        .select("name,quantity,fk_id_variation")
+        .in("fk_id_variation",variation_data.data.map((variation_item)=>
+            variation_item.id
+        ))
+
+        if(variation_size_data.error){
+            return onResponseError(res,500,variation_size_data.error)
+        }
+
+        const formated_product_data = {
+            description:product_data.data[0].description,
+            cod:product_data.data[0].cod,
+            variations:variation_data.data.map((variation_item)=>
+                {
+                    return {
+                        name:variation_item.name,
+                        size:variation_size_data.data.filter((size_item)=>
+                            size_item.fk_id_variation === variation_item.id
+                        ).map((size_item)=>
+                            {
+                                return {
+                                    name:size_item.name,
+                                    quantity:size_item.quantity
+                                }
+                            }
+                        )
+                    }
+                }
+            )
+        }
+
+        return res.status(200).send(new Message("Dados de produto listados com sucesso",formated_product_data))
+
+    } catch (error) {
+        console.log(error)
+        res.status(500).send(new Message(error))
+    }
+
+})
+
 export default product_router
