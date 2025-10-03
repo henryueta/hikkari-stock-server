@@ -30,6 +30,7 @@ const sale_variation_size_router = express.Router();
         const size_quantity_data = await database
         .from("tb_size")
         .select("quantity")
+        .eq("is_deleted",false)
         .eq("id",size_id)
         
         if(size_quantity_data.error){

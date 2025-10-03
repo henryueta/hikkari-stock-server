@@ -27,6 +27,7 @@ sale_variation_router.get("/sale/variation/get",async (req,res)=>{
         const product_variation_data = await database
         .from("tb_product_variation")
         .select("fk_id_variation")
+        .eq("is_deleted",false)
         .eq("fk_id_product",product_id)
 
         if(product_variation_data.error){
@@ -37,6 +38,7 @@ sale_variation_router.get("/sale/variation/get",async (req,res)=>{
         const variation_data = await database
         .from("tb_variation")
         .select("label:name,value:id")
+        .eq("is_deleted",false)
         .in('id',product_variation_data.data.map((product_variation_item)=>
             product_variation_item.fk_id_variation
         ))
@@ -87,6 +89,7 @@ sale_variation_router.get("/sale/variation/size/get",async (req,res)=>{
         const size_data = await database
         .from("tb_size")
         .select("label:name,value:id")
+        .eq("is_deleted",false)
         .eq("fk_id_variation",variation_id)
 
         if(size_data.error){

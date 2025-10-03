@@ -25,6 +25,7 @@ sale_router.get("/sale/get-id",async (req,res)=>{
         const sale_data = await database
         .from("tb_sale")
         .select("client_name,type:sale_type")
+        .eq("is_deleted",false)
         .eq("id",id)
 
         if(sale_data.error){
@@ -34,6 +35,7 @@ sale_router.get("/sale/get-id",async (req,res)=>{
         const sale_product_variation_data = await database
         .from("tb_sale_product")
         .select("fk_id_product_variation,fk_id_size,quantity")
+        .eq("is_deleted",false)
         .eq("fk_id_sale",id)
 
         if(sale_product_variation_data.error){
@@ -43,6 +45,7 @@ sale_router.get("/sale/get-id",async (req,res)=>{
         const product_variation_data = await database
         .from("tb_product_variation")
         .select("fk_id_product,fk_id_variation,id")
+        .eq("is_deleted",false)
         .in("id",sale_product_variation_data.data.map((product_variation_item)=>
             product_variation_item.fk_id_product_variation
         ))
@@ -54,6 +57,7 @@ sale_router.get("/sale/get-id",async (req,res)=>{
         const product_data = await database
         .from("tb_product")
         .select("value:id")
+        .eq("is_deleted",false)
         .in("id",product_variation_data.data.map((product_variation_item)=>
             product_variation_item.fk_id_product
         ))
@@ -65,6 +69,7 @@ sale_router.get("/sale/get-id",async (req,res)=>{
         const variation_data = await database
         .from("tb_variation")
         .select("value:id")
+        .eq("is_deleted",false)
         .in("id",product_variation_data.data.map((product_item)=>
             product_item.fk_id_variation
         ))
@@ -76,6 +81,7 @@ sale_router.get("/sale/get-id",async (req,res)=>{
         const size_data = await database
         .from("tb_size")
         .select("value:id,fk_id_variation")
+        .eq("is_deleted",false)
         .in("id",sale_product_variation_data.data.map((product_variation_item)=>
             product_variation_item.fk_id_size
         ))
@@ -206,6 +212,7 @@ sale_router.post("/sale/post",async (req,res)=>{
         const variation_size_quantity_data = await database
         .from("tb_size")
         .select("quantity,id")
+        .eq("is_deleted",false)
         .in("id",formated_variation_data.map((variation_id)=>
             variation_id.size
         ))
@@ -244,6 +251,7 @@ sale_router.post("/sale/post",async (req,res)=>{
             client_name:data.client_name
         })
         .select("id")
+        .eq("is_deleted",false)
 
         if(sale_insert.error){
            return res.status(500).send(new Message(sale_insert.error))
@@ -252,6 +260,7 @@ sale_router.post("/sale/post",async (req,res)=>{
         const product_variation_data = await database
         .from("tb_product_variation")
         .select("id,fk_id_variation")
+        .eq("is_deleted",false)
         .in("fk_id_product",
             data.products_id.map((product_item)=>
                 product_item.product_id

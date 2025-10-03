@@ -26,6 +26,7 @@ auth_router.post("/auth/post",async(req,res)=>{
         .from("tb_user")
         .select("password,id")
         .eq("username",username)
+        .eq("is_deleted",false)
 
         if(!username_checkout.data.length){
             return res.status(403).send({message:"Username inválido ou inexistente"})

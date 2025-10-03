@@ -23,6 +23,7 @@ sale_product_router.get("/sale/product/get",async (req,res)=>{
         const product_data = await database
         .from("tb_product")
         .select("label:description,value:id")
+        .eq("is_deleted",false)
 
         if(product_data.error){
             return onResponseError(res,500,product_data.error)
@@ -63,7 +64,8 @@ sale_product_router.get("/sale/product/get-id",async (req,res)=>{
 
         const all_product_data = await database
         .from("tb_product")
-        .select("label:description,value:id");
+        .select("label:description,value:id")
+        .eq("is_deleted",false)
         
         if(all_product_data.error){
             return onResponseError(res,500,all_product_data.error)
@@ -72,7 +74,8 @@ sale_product_router.get("/sale/product/get-id",async (req,res)=>{
         const sale_product_data = await database
         .from("tb_sale_product")
         .select("fk_id_size,fk_id_product_variation")
-        .eq("fk_id_sale",id);
+        .eq("fk_id_sale",id)
+        .eq("is_deleted",false)
 
         if(sale_product_data.error){
             return onResponseError(res,500,sale_product_data.error)
@@ -81,6 +84,7 @@ sale_product_router.get("/sale/product/get-id",async (req,res)=>{
         const product_variation_data = await database
         .from("tb_product_variation")
         .select("fk_id_product,fk_id_variation")
+        .eq("is_deleted",false)
         .in("id",sale_product_data.data.map((sale_product_item)=>
             sale_product_item.fk_id_product_variation
         ))
@@ -92,6 +96,7 @@ sale_product_router.get("/sale/product/get-id",async (req,res)=>{
         const variation_data = await database
         .from("tb_variation")
         .select("label:name,value:id")
+        .eq("is_deleted",false)
         .in("id",product_variation_data.data.map((product_variation_item)=>
             product_variation_item.fk_id_variation
         ))
@@ -103,6 +108,7 @@ sale_product_router.get("/sale/product/get-id",async (req,res)=>{
         const size_data = await database
         .from("tb_size")
         .select("label:name,value:id")
+        .eq("is_deleted",false)
         .in("id",sale_product_data.data.map((sale_product_item)=>
             sale_product_item.fk_id_size
         ))
