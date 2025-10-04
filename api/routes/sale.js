@@ -119,7 +119,7 @@ sale_router.get("/sale/get-id",async (req,res)=>{
 
     } catch (error) {
         console.log(error)
-        return res.status(403).send(new Message(error))
+        return onResponseError(res,500,error)
     }
 
 })
@@ -138,7 +138,7 @@ sale_router.post("/sale/post",async (req,res)=>{
         }       
 
         const {data} = req.body
-
+        
         if(!data){
             res.status(403).send(new Message("Campos inválidos ou sem atribuição"));
                 

@@ -21,7 +21,7 @@ sale_variation_router.get("/sale/variation/get",async (req,res)=>{
         }
 
         if(!product_id){
-            return res.status(403).send(new Message("Campo identificador de produto inválido"))
+            return onResponseError(res,403,"Campo identificador de produto inválido")
         }
 
         const product_variation_data = await database

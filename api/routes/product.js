@@ -76,8 +76,6 @@ product_router.put("/product/put",async (req,res)=>{
             !preserved_variations.includes(product_variation_item)
         )
 
-        console.log("Adicionar variações",new_variations)
-        console.log("Deletar variações: ",removed_variations)
 
         for(const variation of data.variations.filter((variation_item)=>
             preserved_variations.includes(variation_item.identifier)
@@ -96,44 +94,20 @@ product_router.put("/product/put",async (req,res)=>{
 
             }
 
+        if(removed_variations.length){
 
-        const variation_delete = await database
-        .from("tb_variation")
-        .update({
-            is_deleted:true
-        })
-        .in("id",removed_variations);
+            const variation_delete = await database
+            .from("tb_variation")
+            .update({
+                is_deleted:true
+            })
+            .in("id",removed_variations);
 
-        if(variation_delete.error){
-            return onResponseError(res,500,variation_delete.error)
-        }
-
-        const variation_insert = await database
-        .from("tb_variation")
-        .insert(new_variations.map((variation_item)=>{
-            return {
-                name:variation_item.name
+            if(variation_delete.error){
+                return onResponseError(res,500,variation_delete.error)
             }
-        }))
-        .select("id")
 
-        if(variation_insert.error){
-            return onResponseError(res,500,variation_insert.error)
         }
-
-        const product_variation_insert = await database
-        .from("tb_product_variation")
-        .insert(variation_insert.data.map((variation_item)=>{
-            return {
-                fk_id_product:id,
-                fk_id_variation:variation_item.id
-            }
-        }))
-
-        if(product_variation_insert.error){
-            return onResponseError(res,500,product_variation_insert.error)
-        }
-
         const size_data = await database
         .from("tb_size")
         .select("id")
@@ -168,11 +142,35 @@ product_router.put("/product/put",async (req,res)=>{
             !preserved_sizes.includes(size_item)
         )
 
-        console.log("Adicionar tamanhos",new_sizes)
-        console.log("Deletar tamanhos: ",removed_sizes)
+        if(new_variations.length){
 
+            const variation_insert = await database
+            .from("tb_variation")
+            .insert(new_variations.map((variation_item)=>{
+                return {
+                    name:variation_item.name
+                }
+            }))
+            .select("id")
 
-            const variation_size_list = new_variations.map((variation_item,variation_index)=>
+            if(variation_insert.error){
+                return onResponseError(res,500,variation_insert.error)
+            }
+
+            const product_variation_insert = await database
+            .from("tb_product_variation")
+            .insert(variation_insert.data.map((variation_item)=>{
+                return {
+                    fk_id_product:id,
+                    fk_id_variation:variation_item.id
+                }
+            }))
+
+            if(product_variation_insert.error){
+                return onResponseError(res,500,product_variation_insert.error)
+            }
+
+            const new_variation_size_list = new_variations.map((variation_item,variation_index)=>
 
                 {
                     if(!!variation_item.size.length){
@@ -186,11 +184,11 @@ product_router.put("/product/put",async (req,res)=>{
 
             ).filter((variation_item)=>variation_item !== null)
 
-            if(!!variation_size_list.length){
+            if(!!new_variation_size_list.length){
 
-                const size_insert = await database
+                const new_variation_size_insert = await database
                 .from("tb_size")
-                .insert(variation_size_list.map((variation_item)=>
+                .insert(new_variation_size_list.map((variation_item)=>
                     {
                         return new_sizes.map((size_item)=>
                             {
@@ -206,45 +204,89 @@ product_router.put("/product/put",async (req,res)=>{
                     }
                 ).flat())
                 .select('id')
-                .eq("is_deleted",false)
             
-                if(size_insert.error){
-                    return onResponseError(res,500,size_insert.error)
+                if(new_variation_size_insert.error){
+                    return onResponseError(res,500,new_variation_size_insert.error)
                 }
-
             }
 
-            for(const size of data.size.filter((size_item)=>
-                request_sizes.includes(size_item.identifier)
-            )){
+        }
 
-                const size_put = await database
+        if(preserved_variations.length){
+
+            const preserverd_variation_size_insert = await database
+            .from("tb_size")
+            .insert(data.variations.filter((variation_item)=>
+                preserved_variations.includes(variation_item.identifier)
+            ).flatMap((variation_item)=>
+                variation_item.size.filter((size_item)=>
+                    !size_item.identifier
+                )
+                .map((size_item)=>
+                    {
+                        return {
+                            name:size_item.name,
+                            quantity:size_item.quantity,
+                            fk_id_variation:variation_item.identifier
+                        }        
+                    }
+                )
+            )
+            )
+
+            if(preserverd_variation_size_insert.error){
+                return onResponseError(res,500,preserverd_variation_size_insert.error)
+            }
+
+        }
+
+
+            for(const size of data.variations.flatMap((variation_item)=>
+                variation_item.size.filter((size_item)=>
+                preserved_sizes.includes(size_item.identifier)
+            ))){
+                    const size_put = await database
+                    .from("tb_size")
+                    .update({
+                        name:size.name,
+                        quantity:size.quantity
+                    })
+                    .eq("id",size.identifier)
+
+                    if(size_put.error){
+                        return onResponseError(res,500,size_put.error)
+                    }
+            }
+
+            if(removed_sizes.length){
+                
+                const size_delete = await database
                 .from("tb_size")
                 .update({
-                    name:size.name,
-                    quantity:size.quantity
+                    is_deleted:true
                 })
-                .eq("id",size.identifier)
+                .in('id',removed_sizes)
+                
+                if(removed_variations.length){
 
-                if(size_put.error){
-                    return onResponseError(res,500,size_put.error)
+                    const size_delete_by_variation = await database
+                    .from("tb_size")
+                    .update({
+                        is_deleted:true
+                    })
+                    .in('fk_id_variation',removed_variations)
+
+                    if(size_delete_by_variation.error){
+                        return onResponseError(res,500,size_delete_by_variation.error)
+                    }
+
+                }
+
+                if(size_delete.error){
+                    return onResponseError(res,500,size_delete.error)
                 }
 
             }
-
-            const size_delete = await database
-            .from("tb_size")
-            .update({
-                is_deleted:true
-            })
-            .in('id',removed_sizes)
-            .in("fk_id_variation",removed_variations)
-
-
-            if(size_delete.error){
-                return onResponseError(res,500,size_delete.error)
-            }
-
         return res.status(200).send(new Message("Dados de produto alterados com sucesso"))
 
     } catch (error) {
@@ -270,21 +312,10 @@ product_router.post("/product/post",async (req,res)=>{
 
         const {data} = req.body
 
-        if(!data){
-            res.status(403).send(new Message("Campos inválidos ou sem atribuição"));
-        
-            if(typeof data !== 'object'){
-               return  res.status(403).send(new Message("Tipo de campos inválidos"))
-            }
+        const product_validation = onValidateProduct(data,'put')
 
-        }
-
-        if(!data.description.length){
-           return res.status(403).send(new Message("Campo descrição inválido"))
-        }
-
-        if(!data.cod.length){
-          return  res.status(403).send(new Message("Campo código inválido"))
+        if(!product_validation.valid){
+            return onResponseError(res,403,product_validation.message)
         }
         
         const product_insert = await database
@@ -371,7 +402,6 @@ product_router.post("/product/post",async (req,res)=>{
                 .eq("is_deleted",false)
 
                 if(size_insert.error){
-                    console.log(size_insert.error)
                     return res.status(500).send(new Message(size_insert.error))
                 }
 
@@ -396,7 +426,6 @@ product_router.get("/product/get",async(req,res)=>{
         .select("*")
 
         if(product_data.error){
-            console.log(product_data.error)
             return res.status(500).send({message:product_data.error})
         }
 
@@ -439,7 +468,7 @@ product_router.get("/product/get/options/",async (req,res)=>{
         const {product_id} = req.query
 
         if(!product_id){
-            return res.status(403).send(new Message("Campo identificador de produto inválido"))
+            return onResponseError(res,403,"Campo identificador de produto inválido")
         }
 
         const variation_data = await database

@@ -2,6 +2,7 @@ import express from "express";
 import database from "../config/supabase.js";
 import hash from "password-hash"
 import { onCreateToken } from "../functions/token.js";
+import { onResponseError } from "../functions/error.js";
 
 
 const auth_router = express.Router();
@@ -29,7 +30,7 @@ auth_router.post("/auth/post",async(req,res)=>{
         .eq("is_deleted",false)
 
         if(!username_checkout.data.length){
-            return res.status(403).send({message:"Username inválido ou inexistente"})
+            return onResponseError(res,403,"Username inválido ou inexistente")
         }  
 
         if(!!username_checkout.error){
@@ -39,7 +40,7 @@ auth_router.post("/auth/post",async(req,res)=>{
         const password_checkout = hash.verify(password,username_checkout.data[0].password)
 
         if(!password_checkout){
-            return res.status(403).send({message:"Senha inválida ou inexistente"})
+            return onResponseError(res,403,"Senha inválida ou inexistente")
         }
 
         return res.status(201).send({message:"Usuário logado com sucesso",data:{
