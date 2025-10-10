@@ -1,3 +1,4 @@
+import { onCheckToken } from "./token.js"
 
 const onValidateMessage = (message_param,valid_param)=>{
 
@@ -21,14 +22,13 @@ const onValidateGenericData = (data)=>{
     return onValidateMessage("",true)
 }
 
-const onValidateProduct = (data,method)=>{
+const onValidateProduct = (data)=>{
 
     const generic_data_checkout = onValidateGenericData(data);
 
     if(!generic_data_checkout.valid){
         return generic_data_checkout
     }
-
 
     if(!data.description.length){
         return onValidateMessage("Campo descrição inválido",false)
@@ -48,20 +48,6 @@ const onValidateProduct = (data,method)=>{
             return onValidateMessage("Há variações com campo nome inválido",false)
         }
 
-        // if(method === 'put'){
-
-        //     if( !variation.identifier){
-        //         return onValidateMessage("Há variações com campo identificador inválido",false)
-        //     }
-
-        //     const size_id = variation.size.filter((size_item)=>!size_item.identifier)
-
-        //     if(size_id.length){
-        //         return onValidateMessage("Há tamanhos com campo identificador inválido",false)
-        //     }
-
-        // }
-
         const size_name = variation.size.filter((size_item)=>!size_item.name);
 
         if(size_name.length){
@@ -80,7 +66,84 @@ const onValidateProduct = (data,method)=>{
 
 }
 
+const onValidateSale = (data)=>{
+
+    const generic_data_checkout = onValidateGenericData(data);
+
+    if(!generic_data_checkout.valid){
+        return generic_data_checkout
+    }
+
+    if(!data.client_name.length){
+        return onValidateMessage("Campos cliente inválido",false)
+    }
+
+    if(!data.type.length){
+        return onValidateMessage("Campos tipo de venda inválido",false)
+    }
+
+    if(!data.products_id.length){
+        return onValidateMessage("Campo produtos inválido",false)
+    }
+
+    const product_without_id_list = data.products_id.filter((product_item)=>!product_item.product_id.length)
+
+    if(product_without_id_list.length){
+        return onValidateMessage("Há campos de identificação de produto inválidos",false)
+    }
+
+    const variations_without_size_list = data.products_id.flatMap((product_item)=>
+        product_item.variations_id.filter((variation_item=>
+            !variation_item.size_id.length
+        ))
+    )
+
+    if(variations_without_size_list.length){
+        return onValidateMessage("Há campos de tamanho de variação inválidos",false)
+    }
+
+    const variations_without_id_list = data.products_id.flatMap((product_item)=>
+        product_item.variations_id.filter((variation_item=>
+            !variation_item.variation_id.length
+        ))
+    )
+
+    if(variations_without_id_list.length){
+        return onValidateMessage("Há campos de identificação de variação inválidos",false)
+    }
+
+    const variations_without_quantity_list = data.products_id.flatMap((product_item)=>
+        product_item.variations_id.filter((variation_item=>
+            !variation_item.quantity
+        ))
+    )
+
+    if(variations_without_quantity_list.length){
+        return onValidateMessage("Há campos de quantidade de variação inválidos",false)
+    }
+
+    return onValidateMessage("",true)
+
+}
+
+
+const onValidateToken = (token)=>{
+
+        if(!token){
+            return onValidateMessage("Autenticação inválida",false)
+        }
+        const token_checkout = onCheckToken(token);
+        if(!token_checkout.validated){
+            return onValidateMessage("Token inválido",false)            
+        } 
+
+        return onValidateMessage("",true)
+
+}
+
 export {
     onValidateGenericData,
-    onValidateProduct
+    onValidateProduct,
+    onValidateSale,
+    onValidateToken
 }

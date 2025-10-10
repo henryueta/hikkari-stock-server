@@ -23,7 +23,7 @@ app.get("/",(req,res)=>{
     res.status(200).send({message:"Welcome to Hikkari Stock Server"})
 })
 
-app.listen(2030,(error)=>{
+app.listen(2050,(error)=>{
     if(error){
         console.log(error)
     }

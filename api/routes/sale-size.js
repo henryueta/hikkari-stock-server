@@ -9,7 +9,7 @@ const sale_variation_size_router = express.Router();
     sale_variation_size_router.get("/sale/size/quantity/get",async (req,res)=>{
 
     try {
-        const {token,size_id,index} = req.query
+        const {token,size_id,index,formIndex} = req.query
 
         if(!token){
             return onResponseError(res,403,"Autenticação inválida")
@@ -42,6 +42,7 @@ const sale_variation_size_router = express.Router();
                 field_type:"number",
                 name:"quantity",
                 index:index,
+                formIndex:formIndex,
                 value:size_quantity_data.data[0].quantity
             }
         ]))

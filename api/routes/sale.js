@@ -3,8 +3,94 @@ import Message from "../classes/Message.js";
 import database from "../config/supabase.js";
 import { onResponseError } from "../functions/error.js";
 import { onCheckToken } from "../functions/token.js";
+import { onValidateSale, onValidateToken } from "../functions/validation.js";
 
 const sale_router = express.Router();
+
+sale_router.put("/sale/put",async (req,res)=>{
+
+    try {
+        
+        const {token,id} = req.query
+        
+        const token_validation = onValidateToken(token);
+
+        if(!token_validation.valid){
+            return onResponseError(res,403,token_validation.message)
+        }
+
+        if(!id){
+            return onResponseError(res,403,"Identificador de venda inválido")
+        }
+
+        const {data} = req.body
+
+        const sale_validation = onValidateSale(data);
+        
+        if(!sale_validation.valid){
+            return onResponseError(res,403,sale_validation.message)
+        }
+
+        // const sale_put = await database
+        // .from("tb_sale")
+        // .update({
+        //     client_name:data.client_name,
+        //     sale_type:data.type
+        // })
+        // .eq("id",id)
+
+        // if(sale_put.error){
+        //     return onResponseError(res,500,sale_put.error)
+        // }
+
+        const sale_product_data = await database
+        .from("tb_sale_product")
+        .select("fk_id_product_variation")
+        .eq('fk_id_sale',id)
+        .eq("is_deleted",false)
+
+        if(sale_product_data.error){
+            return onResponseError(res,500,sale_product_data.error)
+        }
+
+        const product_variation_data = await database
+        .from("tb_product_variation")
+        .select("fk_id_product,fk_id_variation,id")
+        .in("id",sale_product_data.data.map((sale_product_item)=>
+            sale_product_item.fk_id_product_variation
+        ));
+
+        if(product_variation_data.error){
+            return onResponseError(res,500,product_variation_data.error)
+        }
+
+        const request_products = data.products_id.map((product_item)=>
+            product_item.product_id
+        )
+
+        const preserved_products = product_variation_data.data.filter((sale_product_item)=>
+            request_products.includes(sale_product_item.fk_id_product)
+        )
+
+        const deleted_products = product_variation_data.data.filter((sale_product_item)=>
+            !request_products.includes(sale_product_item.fk_id_product)
+        ) 
+
+        const new_products = data.products_id.filter((product_item)=>
+         !sale_product_data.data.map((sale_product_variation_item)=>
+                sale_product_variation_item.fk_id_product_variation
+            ).includes(product_item.identifier)
+        )
+        
+        console.log("novos produtos: ",new_products)
+
+        return res.status(201).send(new Message("Nenhum campo inválido"))
+
+    } catch (error) {
+        return onResponseError(res,500,error)
+    }
+
+})
 
 sale_router.get("/sale/get-id",async (req,res)=>{
 
@@ -34,7 +120,7 @@ sale_router.get("/sale/get-id",async (req,res)=>{
 
         const sale_product_variation_data = await database
         .from("tb_sale_product")
-        .select("fk_id_product_variation,fk_id_size,quantity")
+        .select("fk_id_product_variation,fk_id_size,quantity,id")
         .eq("is_deleted",false)
         .eq("fk_id_sale",id)
 
@@ -91,16 +177,16 @@ sale_router.get("/sale/get-id",async (req,res)=>{
             type:sale_data.data[0].type,
             products_id:product_data.data.map((product_item)=>{
                 return {
-
                     product_id:product_item.value,
-
+                    identifier:product_variation_data.data.find((product_variation_item)=>
+                        product_variation_item.fk_id_product === product_item.value
+                    ).id,
                     variations_id:product_variation_data.data.filter((product_variation_item)=>
                         product_variation_item.fk_id_product === product_item.value
                     ).map((product_variation_item)=>
                         {
                             return {
                                 variation_id:product_variation_item.fk_id_variation,
-
                                 size_id: size_data.data.filter((size_item)=>
                                     size_item.fk_id_variation === product_variation_item.fk_id_variation
                                 )[0].value,
@@ -138,63 +224,11 @@ sale_router.post("/sale/post",async (req,res)=>{
         }       
 
         const {data} = req.body
-        
-        if(!data){
-            res.status(403).send(new Message("Campos inválidos ou sem atribuição"));
-                
-            if(typeof data !== 'object'){
-                return  res.status(403).send(new Message("Tipo de campos inválidos"))
-            }
-        
-        }
-        
-        if(!data.client_name.length){
-           return res.status(403).send(new Message("Campo cliente inválido"))
-        }
 
-        if(!data.type.length){
-           return res.status(403).send(new Message("Campo tipo de venda inválido")) 
-        }
+        const sale_validation = onValidateSale(data);
 
-        if(!data.products_id.length){
-           return res.status(403).send(new Message("Campo produtos inválido"))
-        }
-
-        const product_without_id_list = data.products_id.filter((product_item)=>!product_item.product_id.length)
-
-        if(product_without_id_list.length){
-           return res.status(403).send(new Message("Há campos de identificação de produto inválido"))
-        }
-
-        const variations_without_size_list = data.products_id.flatMap((product_item)=>
-            product_item.variations_id.filter((variation_item=>
-                !variation_item.size_id.length
-            ))
-        )
-
-
-        if(variations_without_size_list.length){
-           return res.status(403).send(new Message("Há campos de tamanho de variação inválido"))
-        }
-
-        const variations_without_id_list = data.products_id.flatMap((product_item)=>
-            product_item.variations_id.filter((variation_item=>
-                !variation_item.variation_id.length
-            ))
-        )
-
-        if(variations_without_id_list.length){
-           return res.status(403).send(new Message("Há campos de identificação de variação inválido"))
-        }
-
-        const variations_without_quantity_list = data.products_id.flatMap((product_item)=>
-            product_item.variations_id.filter((variation_item=>
-                !variation_item.quantity
-            ))
-        )
-
-        if(variations_without_quantity_list.length){
-           return res.status(403).send(new Message("Há campos de quantidade de variação inválido"))
+        if(!sale_validation.valid){
+            return onResponseError(res,403,sale_validation.message)
         }
 
         const formated_variation_data = data.products_id.flatMap((product_item)=>

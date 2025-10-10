@@ -3,6 +3,7 @@ import { onResponseError } from "../functions/error.js";
 import { onCheckToken } from "../functions/token.js";
 import database from "../config/supabase.js";
 import Message from "../classes/Message.js";
+import { onValidateToken } from "../functions/validation.js";
 
 const sale_variation_router = express.Router();
 
@@ -10,14 +11,16 @@ sale_variation_router.get("/sale/variation/get",async (req,res)=>{
 
     try {
         
-        const {token,product_id} = req.query
+        const {token,product_id,index,formIndex} = req.query
 
-        if(!token){
-            return onResponseError(res,403,"Autenticação inválida")
+        const token_validation = onValidateToken(token);
+
+        if(!token_validation.valid){
+            return onResponseError(res,403,token_validation.message);
         }
-        const token_checkout = onCheckToken(token);
-        if(!token_checkout.validated){
-            return onResponseError(res,403,"Token inválido")            
+
+        if(!index){
+            return onResponseError(res,403,"Campo index de produto inválido")
         }
 
         if(!product_id){
@@ -53,6 +56,8 @@ sale_variation_router.get("/sale/variation/get",async (req,res)=>{
                 {
                 field_type:"option",
                 name:'variation_id',
+                index:index,
+                formIndex:formIndex,
                 value:variation_data.data
                 }
             ]
@@ -68,7 +73,7 @@ sale_variation_router.get("/sale/variation/get",async (req,res)=>{
 sale_variation_router.get("/sale/variation/size/get",async (req,res)=>{
 
     try {
-        const {token,variation_id,index} = req.query
+        const {token,variation_id,index,formIndex} = req.query
 
         if(!token){
             return onResponseError(res,403,"Autenticação inválida")
@@ -91,7 +96,7 @@ sale_variation_router.get("/sale/variation/size/get",async (req,res)=>{
         .select("label:name,value:id")
         .eq("is_deleted",false)
         .eq("fk_id_variation",variation_id)
-
+        
         if(size_data.error){
             return onResponseError(res,500,size_data.error);
         }
@@ -102,6 +107,7 @@ sale_variation_router.get("/sale/variation/size/get",async (req,res)=>{
                     field_type:"option",
                     name:'size_id',
                     index:index,
+                    formIndex:formIndex,
                     value:size_data.data
                 }
             ]
