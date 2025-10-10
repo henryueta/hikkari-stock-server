@@ -14,9 +14,16 @@ import database from "../config/supabase.js"
 
     const product_data_list = teste.data
     .map((product_item)=>{
-        return Object.values(product_item)
+        return Object.entries(product_item)
     })
-
-
     
+const teste2 = product_data_list.map((item)=>item.map((item2)=>{
+    return (
+        item2[0] === 'id'
+        ? item2[1]+"_decode"
+        : item2[1]
+    )
+}))
+    
+    console.log(teste2)
 })()
