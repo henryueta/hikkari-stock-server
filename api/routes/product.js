@@ -1,11 +1,10 @@
 import express from 'express';
 import database from '../config/supabase.js';
-import { onFormatTable } from '../functions/table.js';
 import Message from '../classes/Message.js';
 import { onResponseError } from '../functions/error.js';
-import { onCheckToken } from '../functions/token.js';
 import { onValidateToken } from '../functions/validation.js';
 import {onValidateProduct} from "../validation/product.js"
+import {onCreateTableStructure} from "../functions/table.js"
 
 const product_router = express.Router();
 
@@ -34,6 +33,7 @@ product_router.post("/product/post",async (req,res)=>{
             cod:data.cod,
         })
         .select("id")
+        
 
         if(product_insert.error){
             return onResponseError(res,500,product_insert.error)
@@ -79,24 +79,23 @@ product_router.get("/product/get",async (req,res)=>{
             return onResponseError(res,500,product_data.error)
         }
 
-        const product_header_list = Object.keys(product_data.data[0]).map((product_item)=>product_item);
-        
-        const product_data_list = product_data.data
-        .map((product_item)=>{
-            return Object.entries(product_item)
-        })
-        .map((product_item)=>product_item.map((product_item_key)=>{
-            return (
-                product_item_key[0] === 'id'
-                ? product_item_key[1]+"_decode"
-                : product_item_key[1]
-            )
-        }))
+        const product_table = onCreateTableStructure(product_data.data)
 
-        return res.status(200).send(new Message("Produtos listados com sucesso",{
-            header:product_header_list,
-            data:product_data_list
-        }))
+        // const product_header_list = Object.keys(product_data.data[0]).map((product_item)=>product_item);
+        
+        // const product_data_list = product_data.data
+        // .map((product_item)=>{
+        //     return Object.entries(product_item)
+        // })
+        // .map((product_item)=>product_item.map((product_item_key)=>{
+        //     return (
+        //         product_item_key[0] === 'id'
+        //         ? product_item_key[1]+"_decode"
+        //         : product_item_key[1]
+        //     )
+        // }))
+
+        return res.status(200).send(new Message("Produtos listados com sucesso",product_table))
 
 
     } catch (error) {
@@ -123,6 +122,7 @@ product_router.get("/product/get-id",async (req,res)=>{
         .from("tb_product")
         .select("description,cod")
         .eq("id",id)
+        .eq("is_deleted",false)
 
         if(product_data.error){
             return onResponseError(res,500,product_data.error)
@@ -132,6 +132,7 @@ product_router.get("/product/get-id",async (req,res)=>{
         .from("tb_variation")
         .select("name,quantity,id")
         .eq("fk_id_product",id)
+        .eq("is_deleted",false)
 
         if(variation_data.error){
             return onResponseError(res,500,variation_data.error)
@@ -195,6 +196,7 @@ product_router.put("/product/put",async (req,res)=>{
         .from("tb_variation")
         .select("id")
         .eq("fk_id_product",id)
+        .eq("is_deleted",false)
 
         if(product_variations_data.error){
             return onResponseError(res,500,product_variations.error)

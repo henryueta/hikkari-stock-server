@@ -10,7 +10,6 @@ const auth_router = express.Router();
 auth_router.post("/auth/post",async(req,res)=>{
 
     try {
-        console.log(req.body)
         
         const {username,password} = req.body
 
