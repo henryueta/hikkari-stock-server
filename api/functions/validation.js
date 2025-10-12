@@ -127,23 +127,10 @@ const onValidateSale = (data)=>{
 }
 
 
-const onValidateToken = (token)=>{
 
-        if(!token){
-            return onValidateMessage("Autenticação inválida",false)
-        }
-        const token_checkout = onCheckToken(token);
-        if(!token_checkout.validated){
-            return onValidateMessage("Token inválido",false)            
-        } 
-
-        return onValidateMessage("",true)
-
-}
 
 export {
     onValidateGenericData,
     onValidateProduct,
     onValidateSale,
-    onValidateToken
 }

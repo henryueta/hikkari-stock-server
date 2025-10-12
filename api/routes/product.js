@@ -2,7 +2,7 @@ import express from 'express';
 import database from '../config/supabase.js';
 import Message from '../classes/Message.js';
 import { onResponseError } from '../functions/error.js';
-import { onValidateToken } from '../functions/validation.js';
+import { onValidateToken } from '../validation/token.js';
 import {onValidateProduct} from "../validation/product.js"
 import {onCreateTableStructure} from "../functions/table.js"
 
