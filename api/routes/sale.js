@@ -247,48 +247,73 @@ sale_router.put("/sale/put",async (req,res)=>{
             return onResponseError(res,500,sale_put.error)
         }
 
-        // for(const product of data.products){
-
-        //     const sale_product_previous_data = await database
-        //     .from("tb_sale_product")
-        //     .select("quantity")
-        //     .eq("fk_id_variation",product.variation_identifier_id)
-
-        //     if(sale_product_previous_data.error){
-        //         return onResponseError(res,500,sale_product_previous_data.error)
-        //     }
-            
-
-        //     const sale_product_put = await database
-        //     .from("tb_sale_product")
-        //     .update({
-        //         quantity:product.quantity
-        //     })
-        //     .eq("fk_id_variation",product.variation_identifier_id)
-
-        //     if(sale_product_put.error){
-        //         return onResponseError(res,500,sale_product_put.error)
-        //     }
-
-        //     const variation_data = await database
-        //     .from("tb_variation")
-        //     .select("quantity")
-        //     .eq("id",product.variation_identifier_id)
-
-        //     if(variation_data.error){
-        //         return onResponseError(res,500,variation_data.error)
-        //     }
-
-        //     const variation_put = await database
-        //     .from("tb_variation")
-        //     .update({
-        //         quantity:(variation_data.data[0].quantity)
-        //     })
-        //     .eq("id",product.variation_identifier_id)
-
-        // }
-
         return res.status(201).send(new Message("Dados de venda alterados com sucesso"))
+    } catch (error) {
+        return onResponseError(res,500,error)
+    }
+
+})
+
+sale_router.delete("/sale/delete",async (req,res)=>{
+
+    try {
+        
+        const {token,id,stock_devolution}  = req.query;
+        const token_validation = onValidateToken(token);
+
+        if(!token_validation.valid){
+            return onResponseError(res,401,token_validation.message)
+        }
+
+        if(!id){
+            return onResponseError(res,401,"Identificador de venda inválido")
+        } 
+        
+        if(stock_devolution === undefined || stock_devolution == null){
+            return onResponseError(res,401,"Confirmação de devolução de estoque inválida")
+        }
+
+        if(stock_devolution){
+            
+            const sale_variation_data = await database
+            .from("tb_sale")
+            .select("fk_id_variation,quantity")
+            .eq("id",id);
+
+            if(sale_variation_data.error){
+                return onResponseError(res,401,sale_variation_data.error)
+            }
+
+            const variation_data = await database
+            .from("tb_variation")
+            .select('quantity,id')
+            .in("id",sale_variation_data.data.map((sale_variation_item)=>sale_variation_item.fk_id_variation))
+
+            if(variation_data.error){
+                return onResponseError(res,401,variation_data.error)
+            }
+
+            for(const sale_variation of sale_variation_data.data){
+
+                const variation_put = await database
+                .from("tb_variation")
+                .update({
+                    quantity:(variation_data.data.find((variation_item)=>
+                        variation_item.id === sale_variation.fk_id_variation
+                    ).quantity) + sale_variation.quantity
+                })
+                .eq('id',sale_variation.fk_id_variation)
+
+                if(variation_put.error){
+                    return onResponseError(res,401,variation_put.error)
+                }
+
+            }       
+
+            return onResponseError(res,401,"Venda deletada com sucesso")
+
+        }   
+
     } catch (error) {
         return onResponseError(res,500,error)
     }

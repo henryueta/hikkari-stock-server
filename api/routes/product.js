@@ -274,8 +274,11 @@ product_router.delete("/product/delete",async (req,res)=>{
         .eq("id",id)
 
         if(product_delete.error){
+            console.log(product_delete.error)
             return onResponseError(res,500,product_delete.error)
         }
+
+        return res.status(201).send(new Message("Produto deletado com sucesso"))
 
     } catch (error) {
         return onResponseError(res,500,error)
