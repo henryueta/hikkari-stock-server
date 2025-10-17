@@ -1,40 +1,70 @@
-
-// // // import database from "../config/supabase.js";
-// // // import { onFormatTable } from "../functions/table.js";
-
-
+// import cron from "node-cron"
 
 import database from "../config/supabase.js"
-import { onCreateTableStructure } from "../functions/table.js";
+
+
+
+
+
+// // cron.schedule('45 18 * * *', () => {
+    
+
+
+// // });
+
+// // saveJson.mjs ou index.mjs (ou .js com type: "module" no package.json)
+
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// // Para resolver __dirname no ES Modules
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
+
+// // Dados para salvar
+// const data = {
+//   usuario: 'Geraldo',
+//   data: new Date().toISOString(),
+//   status: 'ok'
+// };
+
+// // Caminho do arquivo
+// const dir = path.join(__dirname, 'dados');
+// const filePath = path.join(dir, 'usuario.json');
+
+// // Função para salvar o JSON
+// async function salvarJson() {
+//   try {
+//     await fs.mkdir(dir, { recursive: true }); // cria pasta se não existir
+//     await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
+//     console.log('JSON salvo com sucesso em:', filePath);
+//   } catch (err) {
+//     console.error('Erro ao salvar JSON:', err);
+//   }
+// }
+
+// salvarJson();
+
 
 (async()=>{
 
+    const teste2 = await database
+    .from("tb_product")
+    .select("*")
+
+    if(teste2.error){
+        return console.log(teste2.error)
+    }
+
     const teste = await database
-    .from("vw_table_product")
-    .select("*");
+    .storage.from("hikkari-storage/backup").upload("product.json",JSON.stringify(teste2.data),{
+        upsert:true
+    });
 
-//     const product_header_list = Object.keys(teste.data[0]).map((product_item)=>product_item);
-
-//     const product_data_list = teste.data
-//     .map((product_item)=>{
-//         return Object.entries(product_item)
-//     })
-    
-// const teste2 = product_data_list.map((item)=>item.map((item2)=>{
-//     return (
-//         item2[0] === 'id'
-//         ? item2[1]+"_decode"
-//         : item2[1]
-//     )
-// }))
-    
-//     console.log(teste2)
-    const teste2 = onCreateTableStructure(teste.data)
-
-    console.log(teste2)
+    if(teste.error){
+    return    console.log(teste.error)
+    }
+    return console.log(teste.data)
 
 })()
-
-
-
-
