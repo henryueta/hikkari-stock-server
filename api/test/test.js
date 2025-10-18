@@ -14,10 +14,6 @@ import database from "../config/supabase.js"
 
 // // saveJson.mjs ou index.mjs (ou .js com type: "module" no package.json)
 
-import fs from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
 // // Para resolver __dirname no ES Modules
 // const __filename = fileURLToPath(import.meta.url);
 // const __dirname = path.dirname(__filename);
@@ -49,22 +45,5 @@ import { fileURLToPath } from 'url';
 
 (async()=>{
 
-    const teste2 = await database
-    .from("tb_product")
-    .select("*")
-
-    if(teste2.error){
-        return console.log(teste2.error)
-    }
-
-    const teste = await database
-    .storage.from("hikkari-storage/backup").upload("product.json",JSON.stringify(teste2.data),{
-        upsert:true
-    });
-
-    if(teste.error){
-    return    console.log(teste.error)
-    }
-    return console.log(teste.data)
-
+  
 })()

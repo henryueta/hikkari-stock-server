@@ -3,6 +3,7 @@ import { onResponseError } from "../functions/error.js";
 import { onCheckToken } from "../functions/token.js";
 import database from "../config/supabase.js";
 import Message from "../classes/Message.js";
+import { onValidateToken } from "../validation/token.js";
 
 const sale_product_router = express.Router();
 
@@ -12,13 +13,11 @@ sale_product_router.post("/sale/product/get-list",async (req,res)=>{
         
         const {token} = req.query
 
-        if(!token){
-            return onResponseError(res,403,"Autenticação inválida")
-        }
-        const token_checkout = onCheckToken(token);
-        if(!token_checkout.validated){
-            return onResponseError(res,403,"Token inválido")            
-        }   
+        const token_validation = onValidateToken(token);
+
+        if(!token_validation.valid){
+            return onResponseError(res,401,token_validation.message)
+        } 
 
         const {ids} = req.body
         
@@ -61,7 +60,7 @@ sale_product_router.post("/sale/product/get-list",async (req,res)=>{
         }))
 
     } catch (error) {
-         res.status(500).send(new Message(error))
+        return onResponseError(res,500,error)
     }
 })
 

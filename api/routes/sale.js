@@ -269,16 +269,18 @@ sale_router.delete("/sale/delete",async (req,res)=>{
             return onResponseError(res,401,"Identificador de venda inválido")
         } 
         
-        if(stock_devolution === undefined || stock_devolution == null){
+        if(!stock_devolution){
             return onResponseError(res,401,"Confirmação de devolução de estoque inválida")
-        }
+        }   
 
-        if(stock_devolution){
-            
+        console.log("ext",stock_devolution)
+
+        if(stock_devolution === 'true'){
+            console.log("inter",stock_devolution)
             const sale_variation_data = await database
-            .from("tb_sale")
+            .from("tb_sale_product")
             .select("fk_id_variation,quantity")
-            .eq("id",id);
+            .eq("fk_id_sale",id);
 
             if(sale_variation_data.error){
                 return onResponseError(res,401,sale_variation_data.error)
@@ -310,9 +312,21 @@ sale_router.delete("/sale/delete",async (req,res)=>{
 
             }       
 
-            return onResponseError(res,401,"Venda deletada com sucesso")
 
         }   
+
+
+        const sale_delete = await database
+        .from("tb_sale")
+        .update({
+            is_deleted:true
+        })
+        .eq("id",id)
+
+        if(sale_delete.error){
+            return onResponseError(res,401,sale_delete.error)
+        }
+        return res.status(201).send(new Message("Venda deletada com sucesso"))
 
     } catch (error) {
         return onResponseError(res,500,error)
