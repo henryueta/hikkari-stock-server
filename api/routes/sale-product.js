@@ -37,7 +37,7 @@ sale_product_router.post("/sale/product/get-list",async (req,res)=>{
 
         const product_data = await database
         .from("tb_product")
-        .select("description,id")
+        .select("description,type,id")
         .in("id",variation_data.data.map((variation_item)=>
             variation_item.fk_id_product
         ))
@@ -50,6 +50,11 @@ sale_product_router.post("/sale/product/get-list",async (req,res)=>{
         const formated_data = variation_data.data.map((variation_item)=>{
             return {
                 product:product_data.data.find((product_item)=>product_item.id === variation_item.fk_id_product).description,
+                type:(
+                    product_data.data.find((product_item)=>product_item.id === variation_item.fk_id_product).type === 'ML'
+                    ? "Mercado Livre"
+                    : "Shopee"
+                ),
                 variation:variation_item.name,
                 quantity:variation_item.quantity
             }

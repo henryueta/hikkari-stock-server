@@ -69,7 +69,7 @@ variation_router.post("/variation/get-id",async (req,res)=>{
 
         const product_data = await database
         .from("tb_product")
-        .select("description,id")
+        .select("description,type,id")
         .in("id",variation_data.data.map((variation_item)=>
             variation_item.fk_id_product
         ))
@@ -81,12 +81,18 @@ variation_router.post("/variation/get-id",async (req,res)=>{
 
         const formated_variation_data = variation_data.data.map((variation_item,variation_index)=>{
             return {
-                ["sale_product_product_identifier_id"+"_"+variation_index]:variation_item.fk_id_product,
-                ["sale_product_product_id"+"_"+variation_index]:product_data.data
+                ["sale_product_product_identifier_id_"+variation_index]:variation_item.fk_id_product,
+                ["sale_product_product_id_"+variation_index]:product_data.data
                 .find((product_item)=>product_item.id === variation_item.fk_id_product).description,
-                ["sale_product_variation_identifier_id"+"_"+variation_index]:variation_item.id,
-                ["sale_product_variation_id"+"_"+variation_index]:variation_item.name,
-                ["sale_product_quantity_id"+"_"+variation_index]:variation_item.quantity
+                ['sale_product_type_id_'+variation_index]:(
+                    product_data.data
+                .find((product_item)=>product_item.id === variation_item.fk_id_product).type === 'ML'
+                ? "Mercado Livre"
+                : "Shopee"
+                ),
+                ["sale_product_variation_identifier_id_"+variation_index]:variation_item.id,
+                ["sale_product_variation_id_"+variation_index]:variation_item.name,
+                ["sale_product_quantity_id_"+variation_index]:variation_item.quantity
             }
         })
         console.log(formated_variation_data)

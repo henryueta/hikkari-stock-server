@@ -1,4 +1,4 @@
-// import cron from "node-cron"
+import cron from "node-cron"
 
 import database from "../config/supabase.js"
 
@@ -43,7 +43,9 @@ import database from "../config/supabase.js"
 // salvarJson();
 
 
-(async()=>{
+cron.schedule('* * * * *',async () => {
+    
+   console.log(1)
 
-  
-})()
+
+});

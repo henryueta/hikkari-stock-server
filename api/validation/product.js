@@ -16,18 +16,14 @@ const onValidateProduct = (data)=>{
         return  onValidateMessage("Campo código inválido",false)
     }
 
-    if(!data.variations.length){
-        return onValidateMessage("Campo variações inválido",false)
+    if(!data.type.length){
+        return onValidateMessage('Campo tipo inválido',false)
     }
 
     for(const variation of data.variations ){
 
         if(!variation.name){
             return onValidateMessage("Há variações com campo nome inválido",false)
-        }
-
-        if(!variation.quantity){
-            return onValidateMessage("Há variações com campo quantidade inválido",false)
         }
 
     }

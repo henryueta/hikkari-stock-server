@@ -31,6 +31,7 @@ product_router.post("/product/post",async (req,res)=>{
         .insert({
             description:data.description,
             cod:data.cod,
+            type:data.type
         })
         .select("id")
         
@@ -39,19 +40,22 @@ product_router.post("/product/post",async (req,res)=>{
             return onResponseError(res,500,product_insert.error)
         }
 
-        const variation_insert = await database
-        .from("tb_variation")
-        .insert(data.variations.map((variation_item)=>{
-            return {
-                name:variation_item.name,
-                quantity:variation_item.quantity,
-                fk_id_product:product_insert.data[0].id
+        if(data.variations.length){
+            const variation_insert = await database
+            .from("tb_variation")
+            .insert(data.variations.map((variation_item)=>{
+                return {
+                    name:variation_item.name,
+                    quantity:variation_item.quantity,
+                    fk_id_product:product_insert.data[0].id
+                }
+            })) 
+    
+            if(variation_insert.error){
+                return onResponseError(res,500,variation_insert.error)
             }
-        })) 
-
-        if(variation_insert.error){
-            return onResponseError(res,500,variation_insert.error)
         }
+        
 
         return res.status(201).send(new Message("Produto cadastrado com sucesso"))
 
@@ -71,9 +75,27 @@ product_router.get("/product/get",async (req,res)=>{
             return onResponseError(res,401,token_validation.message)
         }
 
-        const product_data = await database
-        .from("vw_table_product")
-        .select("*");
+        const {type} = req.query
+
+        const product_data = (
+            !!type 
+            ? await database
+            .from("vw_table_product")
+            .select("*")
+            .eq("Tipo",
+                (
+                    type.toLowerCase() === 'ml'
+                    ? "Mercado Livre"
+                    : 
+                    type.toLowerCase() === 'sh'
+                    ? "Shopee"
+                    : ""
+                )
+            )
+            : await database
+            .from("vw_table_product")
+            .select("*")
+        )
         
         if(product_data.error){
             return onResponseError(res,500,product_data.error)
@@ -106,7 +128,7 @@ product_router.get("/product/get-id",async (req,res)=>{
 
         const product_data = await database
         .from("tb_product")
-        .select("description,cod")
+        .select("description,type,cod")
         .eq("id",id)
         .eq("is_deleted",false)
 
@@ -128,6 +150,7 @@ product_router.get("/product/get-id",async (req,res)=>{
         return res.status(200).send(new Message("Dados de produto listados com sucesso",{
             description_id:product_data.data[0].description,
             cod_id:product_data.data[0].cod,
+            type_id:product_data.data[0].type,
             variations_id:variation_data.data.map((variation_item,variation_index)=>{
                 return {
                     ['variation_name_id_'+variation_index]:variation_item.name,
@@ -170,7 +193,8 @@ product_router.put("/product/put",async (req,res)=>{
         .from("tb_product")
         .update({
             description:data.description,
-            cod:data.cod
+            cod:data.cod,
+            type:data.type
         })  
         .eq("id",id)
 
@@ -185,7 +209,7 @@ product_router.put("/product/put",async (req,res)=>{
         .eq("is_deleted",false)
 
         if(product_variations_data.error){
-            return onResponseError(res,500,product_variations.error)
+            return onResponseError(res,500,product_variations_data.error)
         }
 
         const preserved_variations = data.variations.filter((variation_item)=>
