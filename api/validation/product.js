@@ -12,6 +12,10 @@ const onValidateProduct = (data)=>{
         return onValidateMessage("Campo descrição inválido",false)
     }
 
+    if(!data.main_variation.length){
+        return onValidateMessage("Campo nome de variação inválido",false)
+    }
+
     if(!data.cod.length){
         return  onValidateMessage("Campo código inválido",false)
     }

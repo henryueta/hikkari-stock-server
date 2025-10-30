@@ -69,7 +69,7 @@ variation_router.post("/variation/get-id",async (req,res)=>{
 
         const product_data = await database
         .from("tb_product")
-        .select("description,type,id")
+        .select("description,type,main_variation,id")
         .in("id",variation_data.data.map((variation_item)=>
             variation_item.fk_id_product
         ))
@@ -84,6 +84,8 @@ variation_router.post("/variation/get-id",async (req,res)=>{
                 ["sale_product_product_identifier_id_"+variation_index]:variation_item.fk_id_product,
                 ["sale_product_product_id_"+variation_index]:product_data.data
                 .find((product_item)=>product_item.id === variation_item.fk_id_product).description,
+                ["sale_product_main_variation_id_"+variation_index]:product_data.data
+                .find((product_item)=>product_item.id === variation_item.fk_id_product).main_variation,
                 ['sale_product_type_id_'+variation_index]:(
                     product_data.data
                 .find((product_item)=>product_item.id === variation_item.fk_id_product).type === 'ML'

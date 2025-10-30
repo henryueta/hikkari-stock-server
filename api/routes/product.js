@@ -31,6 +31,7 @@ product_router.post("/product/post",async (req,res)=>{
         .insert({
             description:data.description,
             cod:data.cod,
+            main_variation:data.main_variation,
             type:data.type
         })
         .select("id")
@@ -128,7 +129,7 @@ product_router.get("/product/get-id",async (req,res)=>{
 
         const product_data = await database
         .from("tb_product")
-        .select("description,type,cod")
+        .select("description,type,main_variation,cod")
         .eq("id",id)
         .eq("is_deleted",false)
 
@@ -150,6 +151,7 @@ product_router.get("/product/get-id",async (req,res)=>{
         return res.status(200).send(new Message("Dados de produto listados com sucesso",{
             description_id:product_data.data[0].description,
             cod_id:product_data.data[0].cod,
+            main_variation_id:product_data.data[0].main_variation,
             type_id:product_data.data[0].type,
             variations_id:variation_data.data.map((variation_item,variation_index)=>{
                 return {
