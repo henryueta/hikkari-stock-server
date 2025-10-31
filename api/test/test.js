@@ -1,11 +1,64 @@
-import cron from "node-cron"
 
 import database from "../config/supabase.js"
 
+const enviarVestido = async (data)=>{
 
+   const product_insert = await database.from("tb_product")
+   .insert({
+            description:data.description,
+            cod:"000",
+            main_variation:data.main_variation,
+            type:"SH"
+        })
+   .select("id")
+   
+ if(product_insert.error){
+            return onResponseError(res,500,product_insert.error)
+   }
 
+   if(data.variations.length){
+               const variation_insert = await database
+               .from("tb_variation")
+               .insert(data.variations.map((variation_item)=>{
+                   return {
+                       name:variation_item.name,
+                       quantity:variation_item.quantity,
+                       fk_id_product:product_insert.data[0].id
+                   }
+               })) 
+       
+               if(variation_insert.error){
+                   return onResponseError(res,500,variation_insert.error)
+               }
+   }
 
+   return console.log("sucesso")
 
+}
+
+(async ()=>{ await enviarVestido({
+   description:"Calça Legging infantil juvenil Malwee",
+   main_variation:"",
+   variations:[
+        {name:"4",quantity:0},
+      {name:"6",quantity:0},
+      {name:"8",quantity:0},
+      {name:"10",quantity:0},
+      {name:"12",quantity:0},
+      {name:"14",quantity:0},
+      {name:"16",quantity:0}
+    //   {name:"M",quantity:0},
+    //   { name:"G",quantity:0},
+    //   { name:"GG", quantity:0},
+    //   { name:"G1", quantity:0},
+    //   { name:"G2", quantity:0},
+    //   { name:"G3",quantity:0},
+    //   {name:"G4",quantity:1},
+    //   {name:"G5", quantity:0}
+      ]
+})
+})()
+  
 // // cron.schedule('45 18 * * *', () => {
     
 
@@ -41,11 +94,3 @@ import database from "../config/supabase.js"
 // }
 
 // salvarJson();
-
-
-cron.schedule('* * * * *',async () => {
-    
-   console.log(1)
-
-
-});

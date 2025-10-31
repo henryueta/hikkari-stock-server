@@ -196,6 +196,7 @@ product_router.put("/product/put",async (req,res)=>{
         .update({
             description:data.description,
             cod:data.cod,
+            main_variation:data.main_variation,
             type:data.type
         })  
         .eq("id",id)
