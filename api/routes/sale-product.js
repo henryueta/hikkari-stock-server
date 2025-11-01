@@ -37,7 +37,7 @@ sale_product_router.post("/sale/product/get-list",async (req,res)=>{
 
         const product_data = await database
         .from("tb_product")
-        .select("description,type,id")
+        .select("description,type,id,main_variation")
         .in("id",variation_data.data.map((variation_item)=>
             variation_item.fk_id_product
         ))
@@ -55,6 +55,7 @@ sale_product_router.post("/sale/product/get-list",async (req,res)=>{
                     ? "Mercado Livre"
                     : "Shopee"
                 ),
+                main_variation:product_data.data.find((product_item)=>product_item.id === variation_item.fk_id_product).main_variation,
                 variation:variation_item.name,
                 quantity:variation_item.quantity
             }
