@@ -55,7 +55,7 @@ const onCreateMonthSummaryTable = (data,title)=>{
             style="
             width: 100%;
             border-collapse: collapse;
-            font-size: 15px;
+            font-size: 0.7rem;
             color: #333;
             background-color: #fff;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
@@ -87,9 +87,13 @@ const onCreateMonthSummaryTable = (data,title)=>{
   const onCreateMonthSummaryStatistic = async  (table)=>{
   
     const month_statistic = {
-      total_price:await database.rpc('sum_column',{
+      gross_total_price:await database.rpc('sum_column',{
         table_param:table,
-        column_param:"Valor Total"
+        column_param:"Valor Bruto Total"
+      }),
+      liquid_total_price:await database.rpc("sum_column",{
+        table_param:table,
+        column_param:"Valor Liquido Total"
       }),
       product_count:await database.rpc('count_column',{
         table_param:table,
@@ -116,13 +120,20 @@ const onCreateMonthSummaryTable = (data,title)=>{
         }
     }
   
-    if(month_statistic.total_price.error){
+    if(month_statistic.gross_total_price.error){
       return {
         html_content:null,
-        error:month_statistic.total_price.error
+        error:month_statistic.gross_total_price.error
       }
     }
-  
+    
+    if(month_statistic.liquid_total_price.error){
+        return {
+          html_content:null,
+          error:month_statistic.liquid_total_price.error
+        }
+      }
+
     if(month_statistic.product_count.error){
       return {
         html_content:null,
@@ -143,7 +154,8 @@ const onCreateMonthSummaryTable = (data,title)=>{
         error:month_statistic.common_sale_count.error
       }
     }  
-  
+    //bruto
+  //liquido
     const statistic_html = `
       <div class="statistic-container"
       style="
@@ -166,7 +178,10 @@ const onCreateMonthSummaryTable = (data,title)=>{
             <p>Quantidade total de produtos:<span style="font-weight: bolder;">${month_statistic.product_count.data || 0}</span></p>
           </div>
           <div>
-            <p>Ganho total:<span style="font-weight: bolder;">R$  ${month_statistic.total_price.data || 0}</span></p>
+            <p>Valor Bruto Total:<span style="font-weight: bolder;">R$  ${month_statistic.gross_total_price.data || 0}</span></p>
+          </div>
+            <div>
+            <p>Valor Líquido Total:<span style="font-weight: bolder;">R$  ${month_statistic.liquid_total_price.data || 0}</span></p>
           </div>
       </div>
     `
