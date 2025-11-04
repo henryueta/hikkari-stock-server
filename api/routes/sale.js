@@ -5,6 +5,8 @@ import { onResponseError } from "../functions/error.js";
 import { onValidateToken } from "../validation/token.js";
 import { onValidateSale } from "../validation/sale.js";
 import { onCreateTableStructure } from "../functions/table.js";
+import { onValidatePagination } from "../validation/pagination.js";
+import { onPaginate } from "../functions/pagination.js";
 
 
 const sale_router = express.Router();
@@ -107,17 +109,35 @@ sale_router.get("/sale/get",async (req,res)=>{
             return onResponseError(res,401,token_validation.message)
         }
 
+        const {page,limit} = req.query
+
+        const pagination_validate = onValidatePagination({
+            page:page,
+            limit:limit
+        })
+        
+        if(!pagination_validate.valid){
+            return onResponseError(res,401,pagination_validate.message)
+        }
+
+        const pagination_items = onPaginate(page,limit)
+
         const sale_data = await database
         .from("vw_table_sale")
-        .select("*");
+        .select("*")
+        .range(pagination_items.from,pagination_items.to)
 
         if(sale_data.error){
             return onResponseError(res,500,sale_data.error)
         }
 
-        const sale_table = onCreateTableStructure(sale_data.data)
+        let sale_table = {};
 
-        return res.status(200).send(new Message("Vendas listadas com sucesso",sale_table))
+        if(sale_data.data.length){
+            sale_table = onCreateTableStructure(sale_data.data)
+        }
+
+        return res.status(200).send(new Message("Vendas listadas com sucesso",{...sale_table,total:sale_data.data.length}))
 
     } catch (error) {
         return onResponseError(res,500,error)

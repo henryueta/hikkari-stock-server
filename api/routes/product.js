@@ -5,6 +5,8 @@ import { onResponseError } from '../functions/error.js';
 import { onValidateToken } from '../validation/token.js';
 import {onValidateProduct} from "../validation/product.js"
 import {onCreateTableStructure} from "../functions/table.js"
+import { onValidatePagination } from '../validation/pagination.js';
+import { onPaginate } from '../functions/pagination.js';
 
 const product_router = express.Router();
 
@@ -76,7 +78,18 @@ product_router.get("/product/get",async (req,res)=>{
             return onResponseError(res,401,token_validation.message)
         }
 
-        const {type} = req.query
+        const {type,page,limit} = req.query
+
+        const pagination_validate = onValidatePagination({
+            page:page,
+            limit:limit
+        })
+        
+        if(!pagination_validate.valid){
+            return onResponseError(res,401,pagination_validate.message)
+        }
+
+        const pagination_items = onPaginate(page,limit)
 
         const product_data = (
             !!type 
@@ -93,19 +106,25 @@ product_router.get("/product/get",async (req,res)=>{
                     : ""
                 )
             )
-            // .limit(5)
+            .range(pagination_items.from,pagination_items.to)
             : await database
             .from("vw_table_product")
             .select("*")
+            .range(pagination_items.from,pagination_items.to)
         )
         
         if(product_data.error){
             return onResponseError(res,500,product_data.error)
         }
 
-        const product_table = onCreateTableStructure(product_data.data)
+        let product_table = {}
 
-        return res.status(200).send(new Message("Produtos listados com sucesso",product_table))
+        if(product_data.data.length){
+            product_table = onCreateTableStructure(product_data.data)
+        }
+
+
+        return res.status(200).send(new Message("Produtos listados com sucesso",{...product_table,total:product_data.data.length}))
 
 
     } catch (error) {
