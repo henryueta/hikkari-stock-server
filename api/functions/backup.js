@@ -67,7 +67,7 @@ const onBackup = async ()=>{
         throw new Error(sale_product_data_backup.error)
     }
 
-    return console.log("success")
+    return 
 
 }
 

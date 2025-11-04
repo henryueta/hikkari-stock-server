@@ -305,10 +305,8 @@ sale_router.delete("/sale/delete",async (req,res)=>{
             return onResponseError(res,401,"Confirmação de devolução de estoque inválida")
         }   
 
-        console.log("ext",stock_devolution)
 
         if(stock_devolution === 'true'){
-            console.log("inter",stock_devolution)
             const sale_variation_data = await database
             .from("tb_sale_product")
             .select("fk_id_variation,quantity")

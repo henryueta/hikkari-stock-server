@@ -68,9 +68,9 @@ backup_product_router.get("/backup/get",async (req,res)=>{
         }
 
         const formated_date = {
-            day:latest_backup.data[0].updated_at.split('T')[0].split("-")[2],
-            month:latest_backup.data[0].updated_at.split('T')[0].split("-")[1],
-            year:latest_backup.data[0].updated_at.split('T')[0].split("-")[0]
+            day:latest_backup.data[1].updated_at.split('T')[0].split("-")[2],
+            month:latest_backup.data[1].updated_at.split('T')[0].split("-")[1],
+            year:latest_backup.data[1].updated_at.split('T')[0].split("-")[0]
         }
 
         return res.status(200).send(new Message("Último registro de backup listado com sucesso",{

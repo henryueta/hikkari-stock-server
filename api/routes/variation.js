@@ -97,7 +97,6 @@ variation_router.post("/variation/get-id",async (req,res)=>{
                 ["sale_product_quantity_id_"+variation_index]:variation_item.quantity
             }
         })
-        console.log(formated_variation_data)
         return res.status(200).send(new Message("Dados de variações listados com sucesso",formated_variation_data))
 
     } catch (error) {

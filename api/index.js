@@ -9,6 +9,7 @@ import sale_product_router from "./routes/sale-product.js";
 import cron from "node-cron"
 import { onBackup } from "./functions/backup.js";
 import backup_product_router from "./routes/backup.js";
+import summary_router from "./routes/summary.js";
 
 const app = express();
 
@@ -20,12 +21,10 @@ app.use(variation_router);
 app.use(sale_router);
 app.use(backup_product_router);
 app.use(sale_product_router);
+app.use(summary_router);
 
-cron.schedule('30 19 * * *',async () => {
-    
-    await onBackup();
-
-
+cron.schedule('30 19 * * *', () => {
+    onBackup();   
 });
 
 app.get("/",(req,res)=>{
