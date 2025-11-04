@@ -6,19 +6,34 @@ import { onCreateTableStructure } from "../functions/table.js"
 
 (async ()=>{
 
-  const data = await database.from("vw_table_product")
-  .select("*")
-  .limit(5)
+  const page = parseInt('1') || 1
+    const limit = parseInt('5') || 10
 
-  if(data.error){
-    return
-  }
-  const data_table = onCreateTableStructure(data.data)
-  console.log(data_table)
+    // Calcula o intervalo de linhas (baseado em 0)
+    const from = (page - 1) * limit
+    const to = from + limit - 1
 
+    // Faz a consulta paginada
+    const { data, error, count } = await database
+      .from('vw_table_product')
+      .select('*', { count: 'exact' }) // count para saber o total
+      .range(from, to)
+
+    if (error) throw error
+
+    console.log(data)
 })()
 
-
+// {
+//   "page": 2,
+//   "limit": 10,
+//   "total": 95,
+//   "totalPages": 10,
+//   "data": [
+//     { "id": 11, "name": "Item 11" },
+//     ...
+//   ]
+// }
 
 // const enviarVestido = async (data)=>{
 

@@ -93,6 +93,7 @@ product_router.get("/product/get",async (req,res)=>{
                     : ""
                 )
             )
+            .limit(5)
             : await database
             .from("vw_table_product")
             .select("*")

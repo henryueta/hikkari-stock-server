@@ -160,7 +160,7 @@ sale_router.get("/sale/get-id",async (req,res)=>{
 
         const product_data = await database
         .from("tb_product")
-        .select("description,id")
+        .select("description,main_variation,type,id")
         .in("id",sale_product_data.data.map((sale_product_item)=>sale_product_item.fk_id_product))
 
         if(product_data.error){
@@ -191,6 +191,18 @@ sale_router.get("/sale/get-id",async (req,res)=>{
                     ['sale_product_product_id_'+sale_product_index]:product_data.data.find((product_item)=>
                         product_item.id === sale_product_item.fk_id_product
                     ).description,
+                    ['sale_product_main_variation_id_'+sale_product_index]:product_data.data.find((product_item)=>
+                        product_item.id === sale_product_item.fk_id_product
+                    ).main_variation,
+                    ['sale_product_type_id_'+sale_product_index]:(
+
+                        product_data.data.find((product_item)=>
+                            product_item.id === sale_product_item.fk_id_product
+                        ).type === 'SH'
+                        ? "Shopee"
+                        : "Mercado Livre"
+
+                    ),
                     ['sale_product_variation_id_'+sale_product_index]:variation_data.data.find((variation_item)=>
                         variation_item.id === sale_product_item.fk_id_variation
                     ).name,
