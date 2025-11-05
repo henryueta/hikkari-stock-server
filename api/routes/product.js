@@ -91,21 +91,24 @@ product_router.get("/product/get",async (req,res)=>{
 
         const pagination_items = onPaginate(page,limit)
 
+        const table_type = (
+            type.toLowerCase() === 'ml'
+            ? "Mercado Livre"
+            : 
+            type.toLowerCase() === 'sh'
+            ? "Shopee"
+            : 
+            type.toLowerCase() === 'all'
+            ? 'All'
+            : ""
+        )
+
         const product_data = (
-            !!type 
+            !!(table_type !== 'All')
             ? await database
             .from("vw_table_product")
             .select("*")
-            .eq("Tipo",
-                (
-                    type.toLowerCase() === 'ml'
-                    ? "Mercado Livre"
-                    : 
-                    type.toLowerCase() === 'sh'
-                    ? "Shopee"
-                    : ""
-                )
-            )
+            .eq("Tipo",table_type)
             .range(pagination_items.from,pagination_items.to)
             : await database
             .from("vw_table_product")
