@@ -99,7 +99,7 @@ const onCreateMonthSummaryTable = (data,title)=>{
         table_param:table,
         column_param:"Produto"
       }),
-      total_sale_count:await database.from('vw_table_total_sale_quantity').select("count"),
+      total_sale_count:await database.from(table).select("Total de vendas do mês"),
       common_sale_count:await database.rpc('sum_column',{
         table_param:table,
         column_param:"Comum"
@@ -163,7 +163,7 @@ const onCreateMonthSummaryTable = (data,title)=>{
       "
       >
           <div>
-            <p>Quantidade total de vendas:<span style="font-weight: bolder;">${month_statistic.total_sale_count.data[0].count || 0}</span></p>
+            <p>Quantidade total de vendas:<span style="font-weight: bolder;">${month_statistic.total_sale_count.data[0]['Total de vendas do mês'] || 0}</span></p>
           </div>
            <div>
             <p>Quantidade total de vendas Flex:<span style="font-weight: bolder;">${month_statistic.flex_sale_count.data || 0}</span></p>
