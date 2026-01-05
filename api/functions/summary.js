@@ -99,7 +99,7 @@ const onCreateMonthSummaryTable = (data,title)=>{
         table_param:table,
         column_param:"Produto"
       }),
-      total_sale_count:await database.from(table).select("Total de vendas do mês"),
+      total_sale_count:await database.from(table).select('"Total de vendas do mês"'),
       common_sale_count:await database.rpc('sum_column',{
         table_param:table,
         column_param:"Comum"
