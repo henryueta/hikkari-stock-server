@@ -163,7 +163,7 @@ const onCreateMonthSummaryTable = (data,title)=>{
       "
       >
           <div>
-            <p>Quantidade total de vendas:<span style="font-weight: bolder;">${month_statistic.total_sale_count.count || 0}</span></p>
+            <p>Quantidade total de vendas:<span style="font-weight: bolder;">${month_statistic.total_sale_count.data[0].count || 0}</span></p>
           </div>
            <div>
             <p>Quantidade total de vendas Flex:<span style="font-weight: bolder;">${month_statistic.flex_sale_count.data || 0}</span></p>
